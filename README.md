@@ -35,20 +35,7 @@ Ohne eigene Konfiguration läuft die App im Demo-Modus (SQLite + Beispiel-Geträ
 
 ---
 
-## Standard-Zugänge
 
-Passwörter werden in `api/config.php` gesetzt (Vorlage: `api/config.example.php`).
-In der ausgelieferten Vorlage sind es Platzhalter – vor dem Einsatz unbedingt ändern:
-
-| Bereich | Zweck | Passwort (Vorlage) |
-|---------|-------|--------------------|
-| Kasse | Bestellungen aufnehmen/senden, Leergut-Pfand zurückgeben, korrigieren/löschen | `changeme` |
-| Bar | eingehende Bestellungen live ausschenken & abhaken | `changeme` |
-| Admin | Statistik + komplette Verwaltung | `changeme` |
-
-> Passwörter lassen sich auch im Admin-Bereich ändern (schreibt in `api/config.php`).
-
----
 
 ## Konfiguration – `api/config.php`
 
