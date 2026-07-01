@@ -1,4 +1,6 @@
-# Nicht ins Image kopieren (Build schlank halten)
+# Nicht ins Image kopieren (Build schlank halten / keine Geheimnisse ins Image)
+.env
+.env.local
 docs/
 data/
 .git/

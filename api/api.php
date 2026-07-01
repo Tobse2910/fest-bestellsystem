@@ -33,9 +33,9 @@ if (isset($_SESSION['role'])) {
         'secure'   => $isHttps,
     ]);
 }
-// Eigene config.php verwenden, falls vorhanden (per .gitignore aus dem Repo
-// ausgeschlossen). Sonst Demo-Modus über die mitgelieferte Vorlage.
-require file_exists(__DIR__ . '/config.php') ? __DIR__ . '/config.php' : __DIR__ . '/config.example.php';
+// Konfiguration laden. Geheimnisse (Passwörter/DB) kommen aus der .env,
+// die config.php liest sie ein. Ohne .env: Demo-Modus (changeme, SQLite).
+require __DIR__ . '/config.php';
 require __DIR__ . '/db.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -464,19 +464,21 @@ switch ($action) {
             out(['error' => 'invalid_password_chars'], 400);
         }
         $PASSWORTE[$role] = $newPassword;
-        // Erste echte Anpassung erzeugt eine eigene config.php aus der Vorlage
-        // (die Vorlage selbst bleibt unverändert).
-        $cfgPath = __DIR__ . '/config.php';
-        if (!file_exists($cfgPath)) {
-            @copy(__DIR__ . '/config.example.php', $cfgPath);
+        // Passwort in die .env schreiben (bei Bedarf aus .env.example erzeugen).
+        $envMap  = ['kasse' => 'KASSE_PASSWORT', 'bar' => 'BAR_PASSWORT', 'admin' => 'ADMIN_PASSWORT'];
+        $envKey  = $envMap[$role];
+        $envPath = __DIR__ . '/../.env';
+        if (!file_exists($envPath) && file_exists(__DIR__ . '/../.env.example')) {
+            @copy(__DIR__ . '/../.env.example', $envPath);
         }
-        $cfgContent = file_get_contents($cfgPath);
-        $cfgContent = preg_replace_callback(
-            "/'\s*" . preg_quote($role) . "\s*'\s*=>\s*'[^']*'/i",
-            fn($m) => "'" . $role . "' => '" . addcslashes($newPassword, "'") . "'",
-            $cfgContent
-        );
-        file_put_contents($cfgPath, $cfgContent);
+        $envContent = file_exists($envPath) ? file_get_contents($envPath) : '';
+        $newLine = $envKey . '=' . $newPassword;
+        if (preg_match('/^\s*' . $envKey . '\s*=.*$/m', $envContent)) {
+            $envContent = preg_replace('/^\s*' . $envKey . '\s*=.*$/m', $newLine, $envContent);
+        } else {
+            $envContent = rtrim($envContent) . "\n" . $newLine . "\n";
+        }
+        file_put_contents($envPath, $envContent);
         out(['ok' => true, 'message' => "Passwort für '" . $role . "' geändert."]);
     }
 

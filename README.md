@@ -16,7 +16,7 @@ Speicherung wahlweise in MySQL (Live-Webspace) oder automatisch SQLite
 (lokal/Docker, mit JSON-Fallback) – ganz ohne Datenbank-Einrichtung zum Ausprobieren.
 
 > **Standard-Passwort für alle drei Rollen: `changeme`** (Demo-/Auslieferungszustand).
-> **Vor dem echten Einsatz unbedingt ändern** – in `api/config.php` oder direkt im Admin-Bereich.
+> **Vor dem echten Einsatz unbedingt ändern** – in der `.env` oder direkt im Admin-Bereich.
 
 ---
 
@@ -35,27 +35,27 @@ Ohne eigene Konfiguration läuft die App im Demo-Modus (SQLite + Beispiel-Geträ
 
 ---
 
+## Konfiguration – `.env`
 
-
-## Konfiguration – `api/config.php`
-
-Beim ersten Setup die Vorlage kopieren und anpassen:
+Geheimnisse liegen in einer `.env` im Projekt-Wurzelverzeichnis. Beim ersten Setup
+die Vorlage kopieren und Werte eintragen:
 
 ```bash
-cp api/config.example.php api/config.php
+cp .env.example .env
 ```
 
-`config.php` ist per `.gitignore` vom Repo ausgeschlossen und wird nie mitversioniert.
-Läuft die App ohne `config.php`, wird automatisch die Vorlage als Demo genutzt.
+Die echte `.env` ist per `.gitignore` vom Repo ausgeschlossen **und** per `.htaccess`
+vor dem Aufruf im Browser geschützt – Geheimnisse bleiben geheim. Ohne `.env` startet
+die App im Demo-Modus (Passwörter = `changeme`, SQLite).
 
-In der Datei pflegst du:
+In der `.env` pflegst du:
 
-- Passwörter (`$PASSWORTE`),
-- DB-Zugang (`$DB` – leer lassen = SQLite-Demo),
-- Erst-Befüllung der Getränke beim allerersten Start (`$GETRAENKE`),
-- Fallback-Titel (`$FEST_NAME`, falls im Admin nichts gesetzt ist).
+- **Passwörter** je Rolle (`KASSE_PASSWORT`, `BAR_PASSWORT`, `ADMIN_PASSWORT`),
+- **DB-Zugang** (`DB_HOST`/`DB_NAME`/`DB_USER`/`DB_PASS` – leer lassen = SQLite-Demo),
+- **Fest-Name** (`FEST_NAME`, Fallback – im Admin überschreibbar).
 
-Preise mit Punkt als Dezimaltrenner (`3.50`). Getränke/Preise/Kategorien
+Die **Erst-Befüllung der Getränke** (`$GETRAENKE`) steht weiterhin in `api/config.php`
+(kein Geheimnis). Preise mit Punkt als Dezimaltrenner (`3.50`). Getränke/Preise/Kategorien
 pflegt man danach normalerweise bequem im Admin (Datenbank), nicht mehr im Code.
 
 ---
@@ -90,6 +90,7 @@ Der Admin pflegt fast alles live im Browser – Änderungen wirken sofort:
 ## Aufbau
 
 ```
+.env.example        Vorlage für Geheimnisse (kopieren nach .env)
 index.html          Startseite (Rollenauswahl + Login, Titel/Fußzeile dynamisch)
 kasse.html          Bestellannahme (Kategorie-Tabs, Warenkorb, Pfand-Zähler)
 ausschank.html      Bar / Ausschank
@@ -104,7 +105,7 @@ assets/
   img/              hintergrund.jpg (per Admin überschreibbar), Rollen-Icons
 bilder/Getränke/    Getränke-Bilder (Auswahl + Upload-Ziel im Admin)
 api/
-  config.example.php  Konfigurations-Vorlage (kopieren nach config.php)
+  config.php          liest die .env, enthält den Getränke-Seed (kein Geheimnis)
   db.php              Speicherung (MySQL/SQLite/JSON) – nichts ändern nötig
   api.php             Server-Logik / Endpunkte – nichts ändern nötig
   .htaccess           schützt config.php / db.php vor Direktaufruf
@@ -116,7 +117,7 @@ data/               SQLite/JSON-Datei + Rate-Limit-Dateien (per .htaccess gesch�
 ## Deployment auf einem PHP-Webspace
 
 - Alle Dateien per FTP in den gewünschten Webspace-Ordner laden.
-- `api/config.example.php` nach `api/config.php` kopieren und Passwörter + DB-Zugang eintragen.
+- `.env.example` nach `.env` kopieren und Passwörter + DB-Zugang eintragen.
 - Der Ordner `data/` muss beschreibbar sein (Rechte 775/755).
 - Nach Code-Änderungen im Browser `Strg+Shift+R` (Cache); `admin.html` nutzt zusätzlich `?v=`.
 
@@ -124,8 +125,9 @@ data/               SQLite/JSON-Datei + Rate-Limit-Dateien (per .htaccess gesch�
 
 ## Sicherheit / Hinweise
 
-- Passwörter liegen im Klartext in `config.php` bzw. der DB – ausreichend fürs Fest,
-  keine sensiblen Passwörter wiederverwenden.
+- Passwörter liegen im Klartext in der `.env` bzw. der DB – ausreichend fürs Fest,
+  keine sensiblen Passwörter wiederverwenden. Die `.env` ist per `.htaccess` vor
+  Browser-Zugriff geschützt und wird nie ins Repo committet.
 - Preise & Pfand werden bei jeder Bestellung serverseitig aus der Datenbank berechnet
   (manipulationssicher), unabhängig vom Browser.
 - Keine strikte IP-Bindung der Sitzung (stabil bei WLAN-Wechsel/mobilem Netz/VPN);

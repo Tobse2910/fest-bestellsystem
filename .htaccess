@@ -1,3 +1,14 @@
+# .env & Co. NIEMALS im Browser ausliefern (enthalten Passwörter/DB-Zugang).
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # HTML/CSS/JS nie zwischenspeichern -> Änderungen sind sofort sichtbar.
 # (Bilder werden weiterhin gecacht, damit es schnell bleibt.)
 <IfModule mod_headers.c>

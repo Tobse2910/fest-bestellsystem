@@ -1,6 +1,7 @@
-# Lokale Konfiguration mit echten Zugangsdaten – NIEMALS committen!
-# Vorlage: api/config.example.php  ->  nach api/config.php kopieren.
-api/config.php
+# Geheimnisse (Passwörter, DB-Zugang) – NIEMALS committen!
+# Vorlage: .env.example  ->  nach .env kopieren und Werte eintragen.
+.env
+.env.local
 
 # Laufzeitdaten (SQLite-Datenbank, JSON-Fallback, Rate-Limit-Dateien)
 data/*
