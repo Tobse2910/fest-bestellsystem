@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Fest-Bestellsystem</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  body{ overflow:hidden; background:#06101f; }
+
+  /* ---- Hintergrund-Foto mit langsamem Zoom ---- */
+  .bg{ position:fixed; inset:0; z-index:0; overflow:hidden; }
+  .bg img{ width:100%; height:100%; object-fit:cover; object-position:center 38%;
+    animation:kenburns 22s ease-out forwards; }
+  @keyframes kenburns{ from{ transform:scale(1.14); } to{ transform:scale(1); } }
+  /* Verlauf: links dunkel/lesbar, rechts gibt das Foto frei */
+  .bg::after{ content:""; position:absolute; inset:0;
+    background:
+      linear-gradient(100deg, #06101fF2 0%, #06101fE6 34%, #06101f80 64%, #06101f33 100%),
+      linear-gradient(0deg, #06101fF2 0%, transparent 42%); }
+
+  /* ---- Inhalt: linke Spalte, editorial ---- */
+  .stage{ position:relative; z-index:2; height:100vh;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 34px 0 56px; max-width:780px; }
+  .kicker{ display:inline-flex; align-items:center; gap:12px; margin-bottom:18px;
+    animation:introUp .7s ease .25s both; }
+  .kicker .line{ width:46px; height:3px; background:linear-gradient(90deg,var(--gold),var(--gold-2)); border-radius:2px; }
+  .kicker span{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:14px; letter-spacing:4px;
+    text-transform:uppercase; color:var(--gold); }
+
+  .headline{ font-family:"Bricolage Grotesque"; font-weight:800; line-height:.92;
+    font-size:clamp(56px,9.5vw,108px); letter-spacing:-2.5px; color:#fff;
+    text-shadow:0 8px 40px rgba(0,0,0,.5); animation:introUp .8s cubic-bezier(.2,.7,.2,1) .35s both; }
+  .headline em{ font-style:normal;
+    background:linear-gradient(120deg,var(--gold),#FFE39A 50%,var(--gold-2));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .lead{ margin-top:18px; font-size:clamp(16px,2.2vw,20px); color:#C8D2E4; font-weight:500;
+    max-width:460px; animation:introUp .7s ease .5s both; }
+
+  /* ---- Rollen-Buttons ---- */
+  .roles{ margin-top:40px; display:flex; flex-direction:column; gap:13px; max-width:460px; }
+  .role{
+    display:flex; align-items:center; gap:18px; text-align:left;
+    padding:18px 22px; cursor:pointer; color:#fff;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+    border-left:4px solid var(--gold); border-radius:14px;
+    backdrop-filter:blur(10px);
+    transition:transform .14s ease, background .2s ease, border-color .2s ease;
+  }
+  .role:hover{ background:rgba(255,255,255,.12); transform:translateX(4px); }
+  .role:active{ transform:scale(.985); }
+  .role .ic{ width:56px; height:56px; border-radius:12px; display:grid; place-items:center;
+    background:none; border:none; flex-shrink:0; overflow:hidden; }
+  .role .ic img{ width:100%; height:100%; object-fit:contain; display:block;
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.4)); }
+  .role .txt{ flex:1; }
+  .role .txt b{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:20px; display:block; }
+  .role .txt small{ color:#A9B6CC; font-size:13px; }
+  .role .arrow{ font-size:22px; color:var(--gold); opacity:.7; transition:transform .15s ease; }
+  .role:hover .arrow{ transform:translateX(4px); opacity:1; }
+  .role.r1{ animation:introUp .6s ease .6s both; }
+  .role.r2{ animation:introUp .6s ease .7s both; }
+  .role.r3{ animation:introUp .6s ease .8s both; }
+
+  .foot{ position:fixed; bottom:18px; left:56px; z-index:3; color:#7E8CA6; font-size:13px;
+    animation:introUp .7s ease 1s both; }
+
+  /* ---- Login-Overlay ---- */
+  .overlay{ position:fixed; inset:0; z-index:30; display:none;
+    background:rgba(4,10,20,.8); backdrop-filter:blur(10px); align-items:center; justify-content:center; padding:24px; }
+  .overlay.show{ display:flex; }
+  .login{ width:min(420px,92vw); background:#0C1A30; border:1px solid var(--border-2);
+    border-radius:var(--radius); padding:30px 28px 26px; box-shadow:0 30px 80px rgba(0,0,0,.6);
+    animation:introUp .3s ease both; }
+  .login h3{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:24px; margin-bottom:4px;
+    display:flex; align-items:center; gap:12px; }
+  .login h3 .ic{ width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:22px;
+    background:linear-gradient(135deg,var(--gold),var(--gold-2)); color:var(--ink); }
+  .login p{ color:var(--muted); font-size:14px; margin-bottom:20px; }
+  .login label{ display:block; font-weight:600; font-size:14px; margin-bottom:8px; color:var(--muted); }
+  .login input{ width:100%; font-size:20px; font-family:"Archivo"; color:var(--text);
+    padding:15px 16px; border-radius:var(--radius-sm); background:#06101f; border:1px solid var(--border-2);
+    outline:none; transition:border-color .15s ease; }
+  .login input:focus{ border-color:var(--gold); }
+  .login .err{ color:var(--red); font-size:14px; font-weight:600; margin-top:12px; min-height:18px; }
+  .login .row{ display:flex; gap:10px; margin-top:20px; }
+  .login .row .btn{ flex:1; }
+
+  @media (max-width:720px){
+    .bg::after{ background:linear-gradient(0deg,#06101fF7 0%, #06101fCC 50%, #06101f99 100%); }
+    .stage{ padding:0 22px; max-width:none; }
+    .roles{ max-width:none; }
+    .foot{ left:22px; right:22px; font-size:12px; }
+  }
+  /* niedrige Displays (Handy quer): Inhalt oben ausrichten, kompakter */
+  @media (max-height:560px){
+    .stage{ justify-content:flex-start; padding-top:22px; padding-bottom:22px; overflow:auto; }
+    .headline{ font-size:clamp(38px,8vw,64px); }
+    .kicker{ margin-bottom:12px; }
+    .lead{ margin-top:12px; }
+    .roles{ margin-top:18px; gap:9px; }
+    .role{ padding:12px 18px; }
+    .role .ic{ width:42px; height:42px; font-size:21px; }
+    .foot{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"><img src="assets/img/hintergrund.jpg" alt=""></div>
+
+<div class="stage">
+  <div class="kicker"><span class="line"></span><span>Bestellsystem</span></div>
+  <h1 class="headline">STRASSEN&shy;<em>FEST</em></h1>
+  <p class="lead">Schnell bestellen, sauber ausschenken, alles im Blick. Wähle deine Station.</p>
+
+  <div class="roles">
+    <button class="role r1" data-role="kasse">
+      <span class="ic"><img src="assets/img/roles/Bestellannahme.png" alt=""></span>
+      <span class="txt"><b>Bestellannahme</b><small>Bestellungen an der Kasse aufnehmen</small></span>
+      <span class="arrow">→</span>
+    </button>
+    <button class="role r2" data-role="bar">
+      <span class="ic"><img src="assets/img/roles/Bar.png" alt=""></span>
+      <span class="txt"><b>Bar</b><small>Eingehende Bestellungen ausschenken</small></span>
+      <span class="arrow">→</span>
+    </button>
+    <button class="role admin r3" data-role="admin">
+      <span class="ic"><img src="assets/img/roles/Admin.png" alt=""></span>
+      <span class="txt"><b>Admin</b><small>Alles sehen · Tages-Statistik</small></span>
+      <span class="arrow">→</span>
+    </button>
+  </div>
+</div>
+
+<div class="foot">© <span id="footName">Fest-Bestellsystem</span> · <a href="impressum.html" style="color:var(--gold);text-decoration:none;">Impressum</a></div>
+
+<!-- Login-Overlay -->
+<div class="overlay" id="overlay">
+  <form class="login" id="loginForm">
+    <h3><span class="ic" id="loginIc">🧾</span> <span id="loginTitle">Anmelden</span></h3>
+    <p id="loginHint">Bitte Passwort eingeben.</p>
+    <div id="nameField">
+      <div style="display:flex; gap:8px;">
+        <div style="flex:1;">
+          <label for="loginFirstName">Vorname</label>
+          <input type="text" id="loginFirstName" autocomplete="off" placeholder="z. B. Max" maxlength="30">
+        </div>
+        <div style="flex:1;">
+          <label for="loginLastName">Nachname</label>
+          <input type="text" id="loginLastName" autocomplete="off" placeholder="z. B. Müller" maxlength="30">
+        </div>
+      </div>
+    </div>
+    <label for="pw" style="margin-top:16px;">Passwort</label>
+    <input type="password" id="pw" autocomplete="off" inputmode="text" placeholder="••••••">
+    <div class="err" id="loginErr"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="cancelBtn">Abbrechen</button>
+      <button type="submit" class="btn gold" id="okBtn">Einloggen</button>
+    </div>
+  </form>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+  // Fest-Titel dynamisch (im Admin einstellbar)
+  fetch('api/api.php?action=public_info').then((r) => r.json()).then((info) => {
+    if (info && info.festName) {
+      const h = document.querySelector('.headline');
+      if (h) { h.textContent = info.festName; h.style.textTransform = 'uppercase'; }
+      document.title = info.festName;
+    }
+    if (info && info.kicker && info.kicker.trim()) {
+      const k = document.querySelector('.kicker span:last-child');
+      if (k) k.textContent = info.kicker;
+    }
+    if (info && info.slogan && info.slogan.trim()) {
+      const l = document.querySelector('.lead');
+      if (l) l.textContent = info.slogan;
+    }
+    const foot = document.querySelector('.foot');
+    if (foot && info) {
+      const impLink = '<a href="impressum.html" style="color:var(--gold);text-decoration:none;">Impressum</a>';
+      const txt = (info.footerText && info.footerText.trim())
+        ? esc(info.footerText)
+        : '© ' + esc(info.festName || 'Fest-Bestellsystem') + ' · Bestellsystem';
+      foot.innerHTML = txt + ' · ' + impLink;
+    }
+  }).catch(() => {});
+
+  const ROLE_META = {
+    kasse: { ic: '🧾', title: 'Bestellannahme', target: 'kasse.html' },
+    bar:   { ic: '🍺', title: 'Bar / Ausschank', target: 'ausschank.html' },
+    admin: { ic: '📊', title: 'Admin',           target: 'admin.html' },
+  };
+
+  let activeRole = null;
+  const overlay = document.getElementById('overlay');
+  const pwInput = document.getElementById('pw');
+  const firstNameInput = document.getElementById('loginFirstName');
+  const lastNameInput = document.getElementById('loginLastName');
+  const errEl   = document.getElementById('loginErr');
+
+  function openLogin(role) {
+    activeRole = role;
+    const m = ROLE_META[role];
+    document.getElementById('loginIc').textContent = m.ic;
+    document.getElementById('loginTitle').textContent = m.title;
+    const isAdmin = role === 'admin';
+    document.getElementById('nameField').style.display = isAdmin ? 'none' : '';
+    document.getElementById('loginHint').textContent = isAdmin
+      ? `Passwort für „${m.title}" eingeben.`
+      : `Vor- und Nachname eingeben und Passwort für „${m.title}".`;
+    errEl.textContent = '';
+    pwInput.value = '';
+    firstNameInput.value = '';
+    lastNameInput.value = '';
+    overlay.classList.add('show');
+    setTimeout(() => (isAdmin ? pwInput : firstNameInput).focus(), 50);
+  }
+  function closeLogin() { overlay.classList.remove('show'); activeRole = null; }
+
+  document.querySelectorAll('.role').forEach((card) => {
+    card.onclick = () => openLogin(card.dataset.role);
+  });
+  document.getElementById('cancelBtn').onclick = closeLogin;
+  overlay.onclick = (e) => { if (e.target === overlay) closeLogin(); };
+
+  document.getElementById('loginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    if (!activeRole) return;
+    errEl.textContent = '';
+    let firstName = '', lastName = '';
+    if (activeRole !== 'admin') {
+      firstName = firstNameInput.value.trim();
+      lastName = lastNameInput.value.trim();
+      if (!firstName || !lastName) { errEl.textContent = 'Bitte Vor- und Nachname eingeben.'; return; }
+      const nameRegex = /^[a-zA-Z0-9äöüßÄÖÜ\s\-\.]{1,30}$/;
+      if (!nameRegex.test(firstName)) {
+        errEl.textContent = 'Vorname: nur Buchstaben, Zahlen und - . erlaubt.'; return;
+      }
+      if (!nameRegex.test(lastName)) {
+        errEl.textContent = 'Nachname: nur Buchstaben, Zahlen und - . erlaubt.'; return;
+      }
+    }
+    try {
+      await api('login', { method: 'POST', body: { role: activeRole, password: pwInput.value, firstName, lastName } });
+      location.href = ROLE_META[activeRole].target;
+    } catch (err) {
+      if (err.status === 401) errEl.textContent = 'Falsches Passwort oder Login gesperrt.';
+      else errEl.textContent = 'Anmeldung fehlgeschlagen. Server erreichbar?';
+      pwInput.select();
+    }
+  };
+</script>
+</body>
+</html>

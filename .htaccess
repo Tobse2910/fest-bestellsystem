@@ -1,0 +1,9 @@
+# HTML/CSS/JS nie zwischenspeichern -> Änderungen sind sofort sichtbar.
+# (Bilder werden weiterhin gecacht, damit es schnell bleibt.)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>

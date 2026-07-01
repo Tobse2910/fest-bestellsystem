@@ -1,0 +1,7 @@
+# Nicht ins Image kopieren (Build schlank halten)
+docs/
+data/
+.git/
+*.md
+strassenfest-app.html
+info.txt

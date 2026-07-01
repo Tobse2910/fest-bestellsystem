@@ -1,0 +1,19 @@
+# ============================================================================
+#  Straßenfest-Bestell-App  ·  Start mit Docker Desktop
+#
+#  Starten:   docker compose up -d --build
+#  Öffnen:    http://localhost:8080
+#  Stoppen:   docker compose down   (Daten bleiben im Volume erhalten)
+# ============================================================================
+services:
+  app:
+    build: .
+    container_name: strassenfest
+    ports:
+      - "8095:80"          # Tablets im WLAN: http://<IP-des-Rechners>:8095
+    volumes:
+      - sf_data:/data       # Bestellungen/Datenbank bleiben dauerhaft erhalten
+    restart: unless-stopped
+
+volumes:
+  sf_data:

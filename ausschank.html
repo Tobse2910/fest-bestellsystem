@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Straßenfest · Bar</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  main{ display:flex; flex-direction:column; }
+  .queue{ flex:1; }
+</style>
+</head>
+<body class="appbody">
+
+<header class="app">
+  <div class="brand"><span id="festName">Straßenfest</span> <span class="sub">/ Bar</span></div>
+  <div class="spacer"></div>
+  <span class="who" id="whoami"></span>
+  <div class="pill"><span class="led"></span> <span class="conn-text">verbunden</span></div>
+  <button class="logout" id="logoutBtn">Abmelden</button>
+</header>
+
+<main>
+  <div class="bar-head">
+    <h2>Offene Bestellungen</h2>
+    <div class="count">Offen <b id="openCount">0</b></div>
+  </div>
+  <div class="queue" id="queue"><p class="bar-empty">Wird geladen …</p></div>
+</main>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/queue.js"></script>
+<script>
+  (async () => {
+    const role = await guard(['bar']);
+    if (!role) return;
+    wireLogout();
+
+    // Festname laden (best effort)
+    try {
+      const cfg = await api('config');
+      setWho(cfg.name);
+      if (cfg.festName) {
+        document.querySelectorAll('#festName').forEach((e) => (e.textContent = cfg.festName));
+        document.title = `${cfg.festName} · Bar`;
+      }
+    } catch (_) {}
+
+    const queueEl = document.getElementById('queue');
+    const countEl = document.getElementById('openCount');
+
+    async function done(id) {
+      try {
+        await api('done', { method: 'POST', body: { id } });
+      } catch (err) {
+        if (err.status === 401) { location.href = 'index.html'; return; }
+      }
+    }
+
+    startQueuePolling(queueEl, { intervalMs: 2000, countEl, onDone: done });
+  })();
+</script>
+</body>
+</html>

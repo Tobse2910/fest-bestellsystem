@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Straßenfest · Admin</title>
+<link rel="stylesheet" href="assets/css/style.css?v=9">
+<style>
+  main{ display:flex; flex-direction:column; }
+
+  .tabs{ display:flex; gap:6px; padding:5px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-left:auto; }
+  .tab{ font-family:"Bricolage Grotesque"; font-weight:600; font-size:16px; padding:9px 22px; cursor:pointer;
+    color:var(--muted); background:transparent; border:none; border-radius:10px; transition:all .2s ease; }
+  .tab.active{ background:linear-gradient(135deg,var(--gold),var(--gold-2)); color:var(--ink);
+    box-shadow:0 6px 18px rgba(255,197,41,.32); }
+
+  .panel{ display:none; flex:1; overflow:auto; }
+  .panel.active{ display:flex; flex-direction:column; }
+  .panel iframe{ flex:1; width:100%; border:none; background:var(--navy); }
+
+  /* ---- Statistik ---- */
+  .stats-wrap{ padding:24px; max-width:1000px; margin:0 auto; width:100%; }
+  .stats-top{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  .stats-top h2{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:24px; }
+  .day-select{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .day-select label{ color:var(--muted); font-weight:600; font-size:14px; }
+  .day-select select{
+    font-family:"Archivo"; font-size:16px; color:var(--text); padding:11px 14px; border-radius:12px;
+    background:var(--navy-2); border:1px solid var(--border-2); outline:none; cursor:pointer;
+  }
+
+  .cards{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; }
+  .card .k{ color:var(--muted); font-weight:600; font-size:15px; margin-bottom:10px; }
+  .card .v{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:46px; letter-spacing:-1.5px; }
+  .card.revenue .v{ background:linear-gradient(135deg,var(--gold),var(--gold-2));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .card.revenue .v::after{ content:" €"; font-size:24px; -webkit-text-fill-color:var(--muted); color:var(--muted); }
+  .card .v.eur::after{ content:" €"; font-size:22px; color:var(--muted); }
+
+  /* ---- Dashboard-Kacheln ---- */
+  .kpis{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+  .kpi{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 20px; }
+  .kpi .k{ color:var(--muted); font-weight:600; font-size:13px; margin-bottom:8px; }
+  .kpi .v{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:30px; letter-spacing:-1px; }
+  .kpi .v.gold{ color:var(--gold); }
+  .dash-mid{ display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px; align-items:start; }
+  .dash-card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 20px; margin-bottom:16px; }
+  .dash-card h3{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:16px; margin-bottom:14px; }
+  .rev-bars{ display:flex; align-items:stretch; gap:10px; height:170px; }
+  .rev-col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; }
+  .rev-slot{ flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+  .rev-bar{ width:100%; max-width:46px; min-height:4px; border-radius:8px 8px 0 0; background:linear-gradient(180deg,var(--gold),var(--gold-2)); transition:height .3s ease; }
+  .rev-val{ font-size:11px; font-weight:700; color:var(--gold); margin-bottom:5px; white-space:nowrap; }
+  .rev-h{ font-size:11px; color:var(--muted); font-weight:600; }
+  .top-list{ display:flex; flex-direction:column; }
+  .tp-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 2px; border-bottom:1px solid var(--border); }
+  .tp-row:last-child{ border-bottom:none; }
+  .tp-n{ font-weight:600; font-size:15px; }
+  .tp-v{ font-family:"Bricolage Grotesque"; font-weight:800; color:var(--gold); }
+  @media (max-width:820px){ .kpis{ grid-template-columns:repeat(2,1fr); } .dash-mid{ grid-template-columns:1fr; } }
+  @media (max-width:480px){ .kpi .v{ font-size:24px; } }
+
+  /* ---- Diagramme ---- */
+  .chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 22px; margin-bottom:18px; }
+  .chart-card h3{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:18px; margin-bottom:18px; }
+  /* Vertikale Balken (Stunden) */
+  .vbars{ display:flex; align-items:flex-end; gap:8px; height:180px; padding-top:18px; }
+  .vbars .vbar{ flex:1; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; }
+  .vbars .vbar .bar{ width:100%; max-width:48px; min-height:3px; border-radius:7px 7px 0 0;
+    background:linear-gradient(180deg,var(--gold),var(--gold-2)); position:relative; transition:height .3s ease; }
+  .vbars .vbar .bval{ position:absolute; top:-17px; left:50%; transform:translateX(-50%);
+    font-size:11px; font-weight:700; color:var(--gold); white-space:nowrap; }
+  .vbars .vbar .hlbl{ font-size:12px; color:var(--muted); font-weight:600; }
+  /* Horizontale Balken (Getränke) */
+  .hbars{ display:flex; flex-direction:column; gap:11px; }
+  .hbar{ display:flex; align-items:center; gap:12px; }
+  .hbar .hn{ width:120px; flex-shrink:0; font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hbar .ht{ flex:1; height:24px; background:var(--surface-2); border-radius:8px; overflow:hidden; }
+  .hbar .hf{ height:100%; min-width:3px; border-radius:8px; background:linear-gradient(90deg,var(--gold-2),var(--gold)); transition:width .4s ease; }
+  .hbar .hq{ width:58px; text-align:right; flex-shrink:0; font-family:"Bricolage Grotesque"; font-weight:800; color:var(--gold); }
+
+  table.drinks{ width:100%; border-collapse:collapse; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  table.drinks th, table.drinks td{ text-align:left; padding:14px 18px; border-bottom:1px solid var(--border); }
+  table.drinks th{ color:var(--muted); font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+  table.drinks td{ font-size:18px; font-weight:600; }
+  table.drinks tr:last-child td{ border-bottom:none; }
+  table.drinks td.num, table.drinks th.num{ text-align:right; font-family:"Bricolage Grotesque"; }
+  table.drinks td.qty{ color:var(--gold); font-weight:800; }
+  table.drinks tfoot td{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:19px; background:var(--surface-2); }
+  .stats-empty{ color:var(--muted); text-align:center; padding:50px; font-size:17px; }
+  .seller-h{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:18px; margin:26px 0 12px; }
+
+  /* Kopfzeile umbrechen, sobald die 6 Tabs nicht mehr inline passen (Tablets/Handy):
+     Status/Abmelden bleiben in Zeile 1, die Tab-Leiste rutscht voll breit in Zeile 2
+     und scrollt horizontal. So kann „Abmelden" nie abgeschnitten werden/überlappen. */
+  @media (max-width:1024px){
+    header.app{ flex-wrap:wrap; row-gap:10px; }
+    .tabs{ order:10; flex:1 0 100%; min-width:0; margin-left:0; padding:4px; gap:4px;
+      overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .tabs::-webkit-scrollbar{ display:none; }
+    .tab{ padding:9px 16px; font-size:15px; flex:0 0 auto; white-space:nowrap; }
+  }
+  @media (max-width:760px){
+    .tab{ padding:8px 13px; font-size:14px; }
+    .stats-wrap{ padding:16px; }
+    .stats-top h2{ font-size:20px; }
+    .card{ padding:18px; }
+    .card .v{ font-size:36px; }
+  }
+  /* ---- Getränke-Verwaltung ---- */
+  .drinks-admin{ padding:24px; max-width:760px; margin:0 auto; width:100%; }
+  .drinks-admin h2{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:24px; }
+  .da-hint{ color:var(--muted); font-size:14px; margin:6px 0 20px; }
+  .icon-btn{ width:54px; height:54px; flex-shrink:0; font-size:28px; cursor:pointer; padding:0; overflow:hidden;
+    display:grid; place-items:center; background:var(--surface); border:1px solid var(--border-2);
+    border-radius:14px; transition:border-color .15s ease; }
+  .icon-btn:hover{ border-color:var(--gold); }
+  .icon-btn .dimg{ width:100%; height:100%; object-fit:cover; }
+  .icon-btn .demoji{ font-size:28px; }
+  .price-wrap{ position:relative; display:flex; align-items:center; }
+  .price-wrap span{ position:absolute; right:12px; color:var(--muted); font-weight:600; pointer-events:none; }
+  .fld{ display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+  .fld label{ font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding-left:2px; }
+  #addPfand, .da-row .r-pfand{ width:108px; padding-right:30px; }
+  .r-category{ width:160px; }
+  .da-add, .da-row{ display:flex; align-items:center; gap:10px; }
+  .da-add{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .drinks-admin input[type=text], .drinks-admin input[type=number], .drinks-admin select{
+    font-family:"Archivo"; font-size:17px; color:var(--text); padding:13px 14px; border-radius:12px;
+    background:var(--navy); border:1px solid var(--border-2); outline:none; transition:border-color .15s ease; }
+  .drinks-admin input:focus, .drinks-admin select:focus{ border-color:var(--gold); }
+  #addName, #foodName, .da-row .r-name{ flex:1; min-width:140px; }
+  #addPrice, #foodPrice, .da-row .r-price{ width:108px; padding-right:30px; }
+  .da-list{ display:flex; flex-direction:column; gap:10px; }
+  .da-row{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 12px; flex-wrap:wrap; }
+  .da-row .del{ width:46px; height:46px; flex-shrink:0; border-radius:12px; font-size:20px; cursor:pointer;
+    background:rgba(255,90,71,.13); border:1px solid var(--red); color:var(--red); }
+  .da-row .del:active{ background:var(--red); color:#fff; }
+  .da-row .saved{ color:var(--green); font-size:13px; font-weight:700; opacity:0; transition:opacity .2s ease; white-space:nowrap; }
+  .da-row .saved.show{ opacity:1; }
+  .da-empty{ color:var(--muted); text-align:center; padding:30px; }
+
+  /* Icon-Picker-Grid (im gemeinsamen ui-modal) */
+  .ic-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:6px; }
+  .ic-cell{ aspect-ratio:1; font-size:28px; cursor:pointer; border-radius:12px; overflow:hidden; padding:0;
+    display:grid; place-items:center; background:var(--surface); border:1px solid var(--border-2); transition:all .12s ease; }
+  .ic-cell:hover{ border-color:var(--gold); background:var(--surface-2); }
+  .ic-cell.sel{ border-color:var(--gold); box-shadow:0 0 0 2px var(--gold); }
+  .ic-cell .ic-img{ width:100%; height:100%; object-fit:cover; }
+  .ic-label{ color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:14px 0 8px; }
+  .ic-label:first-child{ margin-top:0; }
+
+  @media (max-width:680px){ .cards{ grid-template-columns:1fr; } }
+  @media (max-width:560px){
+    .da-add{ gap:8px; } #addName{ min-width:120px; }
+    #addPrice, .da-row .r-price{ width:96px; }
+  }
+  @media (max-width:560px){
+    .brand #festName{ display:none; }
+    .tab{ padding:7px 10px; font-size:13px; }
+    .day-select select{ font-size:14px; padding:9px 11px; }
+    .card .v{ font-size:30px; }
+    table.drinks th, table.drinks td{ padding:11px 12px; font-size:15px; }
+    table.drinks th{ font-size:11px; }
+  }
+</style>
+</head>
+<body class="appbody">
+
+<header class="app">
+  <div class="brand"><span id="festName">Straßenfest</span> <span class="sub">/ Admin</span></div>
+  <div class="tabs spacer">
+    <button class="tab active" data-tab="stats">Statistik</button>
+    <button class="tab" data-tab="drinks">Getränke</button>
+    <button class="tab" data-tab="food">🍔 Essen</button>
+    <button class="tab" data-tab="settings">⚙️ Verwaltung</button>
+    <button class="tab" data-tab="bar">Bar</button>
+    <button class="tab" data-tab="kasse">Kasse</button>
+  </div>
+  <span class="who" id="whoami"></span>
+  <div class="pill"><span class="led"></span> <span class="conn-text">verbunden</span></div>
+  <button class="logout" id="logoutBtn">Abmelden</button>
+</header>
+
+<main>
+  <!-- STATISTIK -->
+  <section class="panel active" id="panel-stats">
+    <div class="stats-wrap">
+      <div class="stats-top">
+        <h2>Dashboard</h2>
+        <div class="day-select">
+          <label for="daySel">Tag</label>
+          <select id="daySel"></select>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="k">Umsatz heute</div><div class="v gold" id="kpiRevenue">0,00 €</div></div>
+        <div class="kpi"><div class="k">Bestellungen</div><div class="v" id="kpiCount">0</div></div>
+        <div class="kpi"><div class="k">Ø Bestellwert</div><div class="v" id="kpiAvg">0,00 €</div></div>
+        <div class="kpi"><div class="k">Offene Bestellungen</div><div class="v" id="kpiOpen">0</div></div>
+      </div>
+
+      <div class="dash-mid">
+        <div class="dash-card">
+          <h3>Umsatzverlauf</h3>
+          <div id="revChart" class="rev-chart"></div>
+        </div>
+        <div class="dash-card">
+          <h3>Top Produkte</h3>
+          <div id="topProducts" class="top-list"></div>
+        </div>
+      </div>
+
+      <div class="dash-card">
+        <h3>Verkaufte Mengen je Getränk</h3>
+        <div class="hbars" id="drinkChart"></div>
+      </div>
+
+      <div id="drinksBox">
+        <p class="stats-empty">Noch keine Bestellungen an diesem Tag.</p>
+      </div>
+
+      <div id="sellerBox"></div>
+
+      <p style="color:var(--muted); font-size:14px; margin-top:18px;">
+        💡 Bestellungen <b>korrigieren oder löschen</b>: Tab <b>„Kasse"</b> oben →
+        Button <b>„🕘 Letzte Bestellungen"</b>.
+      </p>
+    </div>
+  </section>
+
+  <!-- GETRÄNKE verwalten -->
+  <section class="panel" id="panel-drinks">
+    <div class="drinks-admin">
+      <h2>Getränke verwalten</h2>
+      <p class="da-hint">Änderungen werden sofort gespeichert und erscheinen automatisch an der Kasse.</p>
+
+      <div class="da-add">
+        <button type="button" class="icon-btn" id="addIcon">🍹</button>
+        <input type="file" id="addImageFile" accept="image/*" style="display:none;">
+        <button type="button" class="btn" id="addImageBtn" style="padding:10px 12px; font-size:13px; background:rgba(255,197,41,.14); border:1px solid var(--gold); color:var(--gold);" title="Bild hochladen">📸 Bild</button>
+        <input type="text" id="addName" placeholder="Name (z. B. Weizen)" maxlength="40">
+        <div class="fld"><label>Kategorie</label>
+          <select id="addCategory">
+            <option value="Softdrinks">Softdrinks</option>
+            <option value="Bier">Bier</option>
+            <option value="Alkoholische Mischgetränke">Alkoholische Mischgetränke</option>
+            <option value="Kurze">Kurze</option>
+            <option value="Sonstiges" selected>Sonstiges</option>
+          </select></div>
+        <div class="fld"><label>Preis</label>
+          <div class="price-wrap"><input type="number" id="addPrice" placeholder="0,00" step="0.10" min="0" inputmode="decimal"><span>€</span></div></div>
+        <div class="fld"><label>Pfand</label>
+          <div class="price-wrap"><input type="number" id="addPfand" placeholder="0,00" step="0.50" min="0" inputmode="decimal"><span>€</span></div></div>
+        <button class="btn gold" id="addBtn">+ Hinzufügen</button>
+      </div>
+
+      <div class="da-list" id="daList"><p class="da-empty">Wird geladen …</p></div>
+    </div>
+  </section>
+
+  <!-- ESSEN verwalten -->
+  <section class="panel" id="panel-food">
+    <div class="drinks-admin">
+      <h2>🍔 Essen verwalten</h2>
+      <p class="da-hint">Essen erscheint an der Kasse unter der eingegebenen Kategorie (z. B. „Essen"). Kein Pfand.</p>
+
+      <div class="da-add">
+        <button type="button" class="icon-btn" id="foodIcon">🍔</button>
+        <input type="file" id="foodImageFile" accept="image/*" style="display:none;">
+        <button type="button" class="btn" id="foodImageBtn" style="padding:10px 12px; font-size:13px; background:rgba(255,197,41,.14); border:1px solid var(--gold); color:var(--gold);" title="Bild hochladen">📸 Bild</button>
+        <input type="text" id="foodName" placeholder="Name (z. B. Bratwurst)" maxlength="40">
+        <div class="fld"><label>Kategorie</label>
+          <input type="text" id="foodCategory" value="Essen" maxlength="40" class="r-category"></div>
+        <div class="fld"><label>Preis</label>
+          <div class="price-wrap"><input type="number" id="foodPrice" placeholder="0,00" step="0.10" min="0" inputmode="decimal"><span>€</span></div></div>
+        <button class="btn gold" id="foodBtn">+ Hinzufügen</button>
+      </div>
+
+      <div class="da-list" id="foodList"><p class="da-empty">Wird geladen …</p></div>
+    </div>
+  </section>
+
+  <!-- VERWALTUNG (Admin-Funktionen) -->
+  <section class="panel" id="panel-settings">
+    <div class="drinks-admin" style="max-width:500px;">
+      <h2>⚙️ Verwaltung</h2>
+      <p class="da-hint">Admin-Funktionen für Passwörter, Datenbank und Benutzer.</p>
+
+      <!-- Seite anpassen: Titel + Hintergrundbild -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:12px;">🎨 Seite anpassen</h3>
+        <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Titel / Fest-Name</label>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <input type="text" id="festNameInput" maxlength="60" placeholder="z. B. Sommerfest 2026" style="flex:1; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+          <button class="btn gold" id="festNameBtn" style="padding:10px 16px;">Speichern</button>
+        </div>
+        <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kleine Zeile über dem Titel (Startseite)</label>
+        <input type="text" id="kickerInput" maxlength="40" placeholder="z. B. Bestellsystem" style="width:100%; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px; box-sizing:border-box; margin-bottom:12px;">
+        <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Untertitel / Slogan (Startseite)</label>
+        <textarea id="sloganInput" rows="2" maxlength="200" placeholder="Schnell bestellen, sauber ausschenken, alles im Blick." style="width:100%; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px; font-family:'Archivo'; line-height:1.4; resize:vertical; box-sizing:border-box;"></textarea>
+        <button class="btn gold" id="heroBtn" style="width:100%; margin-top:10px; margin-bottom:18px;">Startseiten-Texte speichern</button>
+
+        <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Hintergrundbild (Start & alle Bereiche)</label>
+        <input type="file" id="bgFile" accept="image/jpeg,image/png,image/webp" style="display:none;">
+        <button class="btn" id="bgBtn" style="width:100%; background:rgba(255,197,41,.14); border:1px solid var(--gold); color:var(--gold);">📸 Hintergrundbild hochladen</button>
+        <p style="color:var(--muted); font-size:12px; margin-top:6px;">Nach dem Hochladen einmal <b>Strg+Shift+R</b> drücken.</p>
+
+        <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin:16px 0 4px;">Fußzeile (Startseite)</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="footerInput" maxlength="200" placeholder="© Straßenfest · Bestellsystem" style="flex:1; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+          <button class="btn gold" id="footerBtn" style="padding:10px 16px;">Speichern</button>
+        </div>
+        <p style="color:var(--muted); font-size:12px; margin-top:6px;">Leer lassen = automatisch „© [Titel] · Bestellsystem". Der Impressum-Link bleibt immer erhalten.</p>
+      </div>
+
+      <!-- Impressum -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:8px;">📄 Impressum</h3>
+        <p style="color:var(--muted); font-size:14px; margin-bottom:10px;">Dieser Text wird 1:1 auf der Impressum-Seite angezeigt.</p>
+        <textarea id="impressumInput" rows="10" placeholder="Vereinsname e. V.&#10;Straße und Hausnummer&#10;PLZ Ort&#10;&#10;Vertreten durch: ...&#10;E-Mail: ...&#10;Telefon: ..." style="width:100%; padding:12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px; font-family:'Archivo'; line-height:1.5; resize:vertical; box-sizing:border-box;"></textarea>
+        <button class="btn gold" id="impressumBtn" style="margin-top:10px; width:100%;">Impressum speichern</button>
+      </div>
+
+      <!-- Kategorien verwalten -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:12px;">🏷️ Getränke-Kategorien</h3>
+        <p style="color:var(--muted); font-size:14px; margin-bottom:12px;">Verwalte die Kategorien für Getränke.</p>
+        <div id="catList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="newCatInput" placeholder="Neue Kategorie" style="flex:1; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+          <button class="btn gold" id="addCatBtn" style="padding:10px 16px;">+ Hinzufügen</button>
+        </div>
+      </div>
+
+      <!-- User löschen -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:12px;">👤 User löschen</h3>
+        <p style="color:var(--muted); font-size:14px; margin-bottom:12px;">Löscht alle Bestellungen einer Person.</p>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="deleteUserInput" placeholder="Name eingeben (z. B. Max)" style="flex:1; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+          <button class="btn" id="deleteUserBtn" style="background:rgba(255,90,71,.14); border:1px solid rgba(255,90,71,.3); color:var(--red); padding:10px 16px; font-weight:600;">Löschen</button>
+        </div>
+      </div>
+
+      <!-- Passwörter -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:12px;">🔑 Passwörter ändern</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; gap:8px; align-items:flex-end;">
+            <div style="flex:1;">
+              <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Bereich</label>
+              <select id="pwRole" style="width:100%; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+                <option value="kasse">Kasse</option>
+                <option value="bar">Bar</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px;">Neues Passwort</label>
+              <input type="password" id="pwInput" placeholder="z. B. geheim123" style="width:100%; padding:10px 12px; border-radius:10px; background:var(--navy); border:1px solid var(--border-2); color:var(--text); font-size:15px;">
+            </div>
+            <button class="btn gold" id="pwBtn" style="padding:10px 16px;">Ändern</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bestellungen zurücksetzen (Getränke & Bilder bleiben erhalten) -->
+      <div class="card" style="margin-bottom:16px; border:1px solid rgba(255,90,71,.3); background:rgba(255,90,71,.06);">
+        <h3 style="font-family:'Bricolage Grotesque'; font-weight:700; margin-bottom:12px; color:var(--red);">🗑️ Bestellungen zurücksetzen</h3>
+        <p style="color:var(--muted); font-size:14px; margin-bottom:12px;">Löscht <b>ALLE eingegebenen Bestellungen/Verkäufe</b> – ideal für einen frischen Start. Deine <b>Getränke, Preise, Kategorien und Bilder bleiben erhalten</b>. Nicht rückgängig zu machen!</p>
+        <button class="btn danger" id="resetDbBtn" style="width:100%;">Alle Bestellungen löschen</button>
+      </div>
+
+      <div id="settingsMsg" style="margin-top:16px; padding:12px; border-radius:10px; text-align:center; display:none; font-weight:600;"></div>
+    </div>
+  </section>
+
+  <!-- BAR (live, eingebettet) -->
+  <section class="panel" id="panel-bar"></section>
+
+  <!-- KASSE (live, eingebettet) -->
+  <section class="panel" id="panel-kasse"></section>
+</main>
+
+<script src="assets/js/app.js?v=9"></script>
+<script src="assets/js/admin.js?v=9"></script>
+</body>
+</html>

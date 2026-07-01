@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Impressum · Feste</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  body{ overflow:auto; background:#06101f;
+    background-image:linear-gradient(rgba(10,26,51,.92),rgba(7,17,35,.96)), url('assets/img/hintergrund.jpg');
+    background-size:cover; background-position:center; background-attachment:fixed; }
+  .wrap{ max-width:760px; margin:0 auto; padding:40px 22px 60px; }
+  .imp-head{ display:flex; align-items:center; gap:14px; margin-bottom:26px; }
+  .imp-head h1{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:clamp(30px,6vw,46px);
+    text-transform:uppercase; letter-spacing:-1px;
+    background:linear-gradient(120deg,var(--gold),#FFE39A 50%,var(--gold-2));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:26px 28px; margin-bottom:18px; }
+  .card h2{ font-family:"Bricolage Grotesque"; font-weight:700; font-size:20px; margin-bottom:12px; }
+  .card p, .card address{ font-style:normal; color:#D5DCEA; font-size:16px; line-height:1.6; }
+  .card p + p{ margin-top:10px; }
+  .muted{ color:var(--muted); }
+  .test-note{ border:1px solid var(--gold); background:rgba(255,197,41,.1); }
+  .test-note h2{ color:var(--gold); display:flex; align-items:center; gap:10px; }
+  .ph{ color:var(--gold); font-weight:700; }
+  .back{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+  a{ color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="imp-head">
+    <h1>Impressum</h1>
+  </div>
+
+  <div id="impCustom" class="card" style="display:none;">
+    <p style="white-space:pre-wrap; color:#D5DCEA; font-size:16px; line-height:1.6; margin:0;"></p>
+  </div>
+
+  <div id="impDefault">
+  <div class="card test-note">
+    <h2>⚠️ Hinweis: Nur zu Testzwecken</h2>
+    <p>Diese Webseite ist <b>nur vorübergehend zu Test- und Demonstrationszwecken</b> öffentlich
+    erreichbar. Es handelt sich um ein internes Test-/Vorführsystem für ein Fest.
+    Es werden <b>keine echten Bestellungen, Zahlungen oder personenbezogenen
+    Daten von Besuchern</b> verarbeitet. Die Seite kann jederzeit ohne Vorankündigung
+    abgeschaltet werden.</p>
+  </div>
+
+  <div class="card">
+    <h2>Angaben gemäß § 5 DDG (ehem. TMG)</h2>
+    <address>
+      <span class="ph">[Vollständiger Vereinsname, z. B.]</span><br>
+      <span class="ph">[Straße und Hausnummer]</span><br>
+      <span class="ph">[PLZ] [Ort]</span>
+    </address>
+    <p class="muted" style="margin-top:12px;">Vertreten durch: <span class="ph">[Name des/der Vorsitzenden]</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Kontakt</h2>
+    <p>E-Mail: <span class="ph">[Platzhalter]</span><br>
+       Telefon: <span class="ph">[optional]</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Verantwortlich für den Inhalt</h2>
+    <p><span class="ph">[Name, Anschrift wie oben]</span></p>
+    <p class="muted">Vereinsregister / Registernummer: <span class="ph">[falls vorhanden]</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Haftungshinweis</h2>
+    <p class="muted">Da es sich um ein nicht-öffentliches Testsystem handelt, übernimmt der
+    Betreiber keine Gewähr für Verfügbarkeit, Richtigkeit oder Vollständigkeit der hier
+    dargestellten Inhalte.</p>
+  </div>
+  </div><!-- /impDefault -->
+
+  <p style="margin-top:24px;">
+    <a class="btn gold back" href="index.html">← Zur Startseite</a>
+  </p>
+  <p class="muted" style="margin-top:16px; font-size:13px;">
+    Hinweis für den Betreiber: Bitte die <span class="ph">[Platzhalter]</span> oben durch die
+    echten Vereinsdaten ersetzen, bevor die Seite dauerhaft online geht.
+  </p>
+</div>
+<script>
+  fetch('api/api.php?action=public_info').then(function (r) { return r.json(); }).then(function (info) {
+    if (info && info.impressum && info.impressum.trim()) {
+      var box = document.getElementById('impCustom');
+      box.querySelector('p').textContent = info.impressum;
+      box.style.display = 'block';
+      var def = document.getElementById('impDefault');
+      if (def) def.style.display = 'none';
+    }
+    if (info && info.festName) document.title = 'Impressum · ' + info.festName;
+  }).catch(function () {});
+</script>
+</body>
+</html>

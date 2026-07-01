@@ -1,0 +1,21 @@
+# Lokale Konfiguration mit echten Zugangsdaten – NIEMALS committen!
+# Vorlage: api/config.example.php  ->  nach api/config.php kopieren.
+api/config.php
+
+# Laufzeitdaten (SQLite-Datenbank, JSON-Fallback, Rate-Limit-Dateien)
+data/*
+!data/.gitkeep
+!data/.htaccess
+
+# Lokale Bildquellen (nicht Teil der App – die genutzten Bilder liegen in assets/)
+Hintgerund/
+Bild-logo/
+
+# Backups & Editor-/OS-Artefakte
+*.bak
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

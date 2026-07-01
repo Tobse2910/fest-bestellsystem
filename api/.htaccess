@@ -1,0 +1,13 @@
+# config.php und db.php dürfen nie direkt im Browser aufrufbar sein.
+# api.php bleibt erreichbar (das ist die einzige öffentliche Schnittstelle).
+<FilesMatch "^(config|db)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Fallback für ältere Apache-Versionen (vor 2.4)
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(config|db)\.php$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
