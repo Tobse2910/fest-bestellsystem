@@ -15,8 +15,8 @@ Echtzeit zwischen den Geräten läuft über Polling (Aktualisierung alle ~2 s).
 Speicherung wahlweise in MySQL (Live-Webspace) oder automatisch SQLite
 (lokal/Docker, mit JSON-Fallback) – ganz ohne Datenbank-Einrichtung zum Ausprobieren.
 
-> **Standard-Passwort für alle drei Rollen: `changeme`** (Demo-/Auslieferungszustand).
-> **Vor dem echten Einsatz unbedingt ändern** – in der `.env` oder direkt im Admin-Bereich.
+> **Vor dem echten Einsatz die Standard-Passwörter ändern** – in der `.env`
+> (Vorlage `.env.example`) oder direkt im Admin-Bereich.
 
 ---
 
@@ -46,7 +46,7 @@ cp .env.example .env
 
 Die echte `.env` ist per `.gitignore` vom Repo ausgeschlossen **und** per `.htaccess`
 vor dem Aufruf im Browser geschützt – Geheimnisse bleiben geheim. Ohne `.env` startet
-die App im Demo-Modus (Passwörter = `changeme`, SQLite).
+die App im Demo-Modus (Standard-Passwörter aus `.env.example`, SQLite).
 
 In der `.env` pflegst du:
 
